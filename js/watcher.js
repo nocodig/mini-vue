@@ -3,7 +3,7 @@ class Watcher {
     this.vm = vm;
     // data 中的属性名称
     this.key = key;
-    // 回调函数负责更新视图
+    // 回调函数负责更新视图 
     this.cb = cb;
 
     // 把watcher对象记录到Dep的静态属性target中
@@ -23,6 +23,4 @@ class Watcher {
 
     this.cb(newValue);
   }
-
-
 }

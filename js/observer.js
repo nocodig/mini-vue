@@ -34,7 +34,7 @@ class Observer {
       },
 
       set(newValue) {
-        if (newValue === value) {
+        if (newValue === val) {
           return 
         }
 

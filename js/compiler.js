@@ -30,42 +30,87 @@ class Compiler {
     // 遍历所有的属性节点
     Array.from(node.attributes).forEach(attr => {
       let attrName = attr.name;
-         // 是否是指令
+      // 是否是指令
       if (this.isDirective(attrName)) {
         // v-text ->text
         attrName = attrName.substr(2);
         const key = attr.value;
+
+        // 判断该指令是否事件
+        if (attrName.startsWith('on')) {
+          this.eventUpdater(node, key);
+
+          return;
+        }
+
         this.update(node, key, attrName);
       }
     })
- 
+
   }
 
   update(node, key, attrName) {
     const updateFn = this[`${attrName}Updater`];
 
-    updateFn && updateFn(node, this.vm[key]);
+    updateFn && updateFn.call(this, node, this.vm[key], key);
   }
 
-  textUpdater(node, value) {
+  eventUpdater(node, key) {
+    const event = attrName.replace('on:', '');
+    this.onUpdater(node, key, event);
+  }
+
+
+
+  textUpdater(node, value, key) {
     node.textContent = value
+
+    new Watcher(this.vm, key, (newValue) => {
+      node.textContent = newValue;
+    })
   }
 
-  modalUpdater(node, value) {
+  modalUpdater(node, value, key) {
     node.value = value;
+
+    new Watcher(this.vm, key, (newValue) => {
+      node.value = newValue;
+    })
+
+    // 实现双向绑定
+    node.addEventListener('input', () => {
+      this.vm[key] = node.value;
+    })
+  }
+
+  htmlUpdater(node, value, key) {
+    node.innerHTML = value;
+
+    new Watcher(this.vm, key, (newValue) => {
+      node.innerHTML = newValue;
+    })
+  }
+
+  onUpdater(node, key, event) {
+    node.addEventListener(event, this.vm[key])
   }
 
   // 编译文本几点，处理差值表达式
   compileText(node) {
     // console.dir(node);
     // {{ msg }}
-     const reg = /\{\{(.+?)\}\}/;
-     const value = node.textContent;
-     if (reg.test(value)) {
+    const reg = /\{\{(.+?)\}\}/;
+    const value = node.textContent;
+    if (reg.test(value)) {
       //  获取匹配到分组的内容
-       const key = RegExp.$1.trim();
-       node.textContent = value.replace(reg, this.vm[key]);
-     }
+      const key = RegExp.$1.trim();
+      node.textContent = value.replace(reg, this.vm[key]);
+
+      // 创建watcher对象
+      new Watcher(this.vm, key, (newValue) => {
+        node.textContent = newValue;
+      })
+    }
   }
 
   // 判断元素属性，是否是指令
